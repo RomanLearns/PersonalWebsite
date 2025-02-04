@@ -1,0 +1,105 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+
+nav {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+nav ul li {
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.container {
+    padding: 20px;
+    background: #fff;
+    margin: 20px auto;
+    max-width: 1200px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+form fieldset {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fafafa;
+}
+
+form legend {
+    font-weight: bold;
+    padding: 0 10px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+form input[type="number"],
+form select {
+    padding: 8px;
+    font-size: 1em;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+input[type="submit"] {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+h1, h2, h3 {
+    color: #333;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background: #ccc;
+    margin: 20px 0;
+}
+
+.row {
+    display: flex;
+    flex-direction: row; /* or just "flex" if you prefer row by default */
+    flex-wrap: wrap;
+    margin: 20px 0; /* No negative margin */
+    gap: 10px;      /* A small gap between columns */
+}
+
+.column {
+    width: 48%;     /* Force each column to ~half the row width */
+    box-sizing: border-box;
+}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 style="text-align: center;">Check out my Resume!</h1>
+    <hr>
+    <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px;">
+        <iframe src="{{ url_for('static', filename='pdf/ChenowethRomanResume.pdf') }}" width="1100" height="1400" type="application/pdf"></iframe>
+    </div>
+{% endblock %}

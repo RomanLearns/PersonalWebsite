@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Advanced Black-Scholes Options Pricer</h1>
+    <form method="post" action="{{ url_for('options') }}">
+        <fieldset>
+            <legend>Input Parameters</legend>
+            <label>Spot Price:
+                <input type="number" step="0.1" name="spot" value="{{ spot }}">
+            </label>
+            <label>Strike Price:
+                <input type="number" step="0.1" name="strike" value="{{ strike }}">
+            </label>
+            <label>Time to Expiration (years):
+                <input type="number" step="0.1" name="time" value="{{ time }}">
+            </label>
+            <label>Interest Rate:
+                <input type="number" step="0.01" name="interest" value="{{ interest }}">
+            </label>
+            <label>Volatility:
+                <input type="number" step="0.01" name="volatility" value="{{ volatility }}">
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Heatmap Settings</legend>
+            <label>Minimum Spot Price:
+                <input type="number" step="0.1" name="min_spot" value="{{ min_spot }}">
+            </label>
+            <label>Maximum Spot Price:
+                <input type="number" step="0.1" name="max_spot" value="{{ max_spot }}">
+            </label>
+            <label>Minimum Volatility:
+                <input type="number" step="0.01" name="min_vol" value="{{ min_vol }}">
+            </label>
+            <label>Maximum Volatility:
+                <input type="number" step="0.01" name="max_vol" value="{{ max_vol }}">
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Option Strategy Analysis</legend>
+            <label>Select an option strategy:
+                <select name="strategy">
+                    <option value="Long Straddle" {% if strategy == "Long Straddle" %}selected{% endif %}>Long Straddle</option>
+                    <option value="Bull Call Spread" {% if strategy == "Bull Call Spread" %}selected{% endif %}>Bull Call Spread</option>
+                    <option value="Bear Put Spread" {% if strategy == "Bear Put Spread" %}selected{% endif %}>Bear Put Spread</option>
+                    <option value="Long Strangle" {% if strategy == "Long Strangle" %}selected{% endif %}>Long Strangle</option>
+                </select>
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Monte Carlo Simulation Settings</legend>
+            <label>Number of Simulations:
+                <input type="number" step="1000" name="num_simulations" value="{{ num_simulations }}">
+            </label>
+            <label>Number of Time Steps:
+                <input type="number" step="1" name="num_steps" value="{{ num_steps }}">
+            </label>
+        </fieldset>
+        <input type="submit" value="Calculate">
+    </form>
+
+    <hr>
+    <h2>Results</h2>
+    <p>Call Option Price: ${{ "%.2f"|format(call) }}</p>
+    <p>Put Option Price: ${{ "%.2f"|format(put) }}</p>
+
+    <h3>Greeks</h3>
+    <ul>
+        <li>Delta (Call): {{ "%.4f"|format(delta_call) }}</li>
+        <li>Delta (Put): {{ "%.4f"|format(delta_put) }}</li>
+        <li>Gamma: {{ "%.4f"|format(gamma) }}</li>
+        <li>Theta (Call): {{ "%.4f"|format(theta_call) }}</li>
+        <li>Theta (Put): {{ "%.4f"|format(theta_put) }}</li>
+        <li>Vega: {{ "%.4f"|format(vega) }}</li>
+    </ul>
+
+    <!-- Option Price Surfaces Side by Side -->
+    {% if call_surface and put_surface %}
+    <div class="row">
+        <div class="column">
+            <h3>3D Call Option Price Surface</h3>
+            <div id="call_surface"></div>
+            <script>
+                var callData = {{ call_surface|tojson }};
+                Plotly.newPlot('call_surface', callData.data, callData.layout);
+            </script>
+        </div>
+        <div class="column">
+            <h3>3D Put Option Price Surface</h3>
+            <div id="put_surface"></div>
+            <script>
+                var putData = {{ put_surface|tojson }};
+                Plotly.newPlot('put_surface', putData.data, putData.layout);
+            </script>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Profit/Loss Diagram -->
+    <h3>Profit/Loss Diagram for {{ strategy }}</h3>
+    <div id="pnl_chart"></div>
+    <script>
+        var pnlData = {{ pnl_chart|tojson }};
+        Plotly.newPlot('pnl_chart', pnlData.data, pnlData.layout);
+    </script>
+
+    <!-- Monte Carlo and Distribution Charts Side by Side -->
+    <div class="row">
+        <div class="column">
+            <h2>Monte Carlo Simulation</h2>
+            <p>Simulated Call Price: ${{ "%.2f"|format(simulated_call_price) }}</p>
+            <div id="mc_chart"></div>
+            <script>
+                var mcData = {{ mc_chart|tojson }};
+                Plotly.newPlot('mc_chart', mcData.data, mcData.layout);
+            </script>
+        </div>
+        <div class="column">
+            <h2>Distribution of Final Asset Prices</h2>
+            <p>Simulated Put Price: ${{ "%.2f"|format(simulated_put_price) }}</p>
+            <div id="hist_chart"></div>
+            <script>
+                var histData = {{ hist_chart|tojson }};
+                Plotly.newPlot('hist_chart', histData.data, histData.layout);
+            </script>
+        </div>
+    </div>
+{% endblock %}
