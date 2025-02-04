@@ -35,7 +35,7 @@ def options():
     min_spot = spot * 0.5
     max_spot = spot * 1.5
     min_vol = volatility * 0.5
-    max_vol = volatility * 1.5
+    max_vol = round(volatility * 1.5, 2)
     strategy = "Long Straddle"
     num_simulations = 10000
     num_steps = 252
