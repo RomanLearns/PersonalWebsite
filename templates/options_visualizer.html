@@ -45,6 +45,9 @@
                     <option value="Bull Call Spread" {% if strategy == "Bull Call Spread" %}selected{% endif %}>Bull Call Spread</option>
                     <option value="Bear Put Spread" {% if strategy == "Bear Put Spread" %}selected{% endif %}>Bear Put Spread</option>
                     <option value="Long Strangle" {% if strategy == "Long Strangle" %}selected{% endif %}>Long Strangle</option>
+                    <option value="Long Butterfly" {% if strategy == "Long Butterfly" %}selected{% endif %}>Long Butterfly</option>
+                    <option value="Iron Condor" {% if strategy == "Iron Condor" %}selected{% endif %}>Iron Condor</option>
+                    <option value="Box Spread" {% if strategy == "Box Spread" %}selected{% endif %}>Box Spread</option>
                 </select>
             </label>
         </fieldset>
@@ -67,14 +70,72 @@
     <p>Put Option Price: ${{ "%.2f"|format(put) }}</p>
 
     <h3>Greeks</h3>
-    <ul>
-        <li>Delta (Call): {{ "%.4f"|format(delta_call) }}</li>
-        <li>Delta (Put): {{ "%.4f"|format(delta_put) }}</li>
-        <li>Gamma: {{ "%.4f"|format(gamma) }}</li>
-        <li>Theta (Call): {{ "%.4f"|format(theta_call) }}</li>
-        <li>Theta (Put): {{ "%.4f"|format(theta_put) }}</li>
-        <li>Vega: {{ "%.4f"|format(vega) }}</li>
-    </ul>
+    <div class="row">
+        <div class="column">
+            <h4>Call Option Greeks</h4>
+            <ul>
+                <li>Delta: {{ "%.4f"|format(call_greeks.delta) }}</li>
+                <li>Gamma: {{ "%.4f"|format(call_greeks.gamma) }}</li>
+                <li>Theta: {{ "%.4f"|format(call_greeks.theta) }}</li>
+                <li>Vega: {{ "%.4f"|format(call_greeks.vega) }}</li>
+                <li>Vanna: {{ "%.4f"|format(call_greeks.vanna) }}</li>
+                <li>Charm: {{ "%.4f"|format(call_greeks.charm) }}</li>
+                <li>Speed: {{ "%.4f"|format(call_greeks.speed) }}</li>
+                <li>Color: {{ "%.4f"|format(call_greeks.color) }}</li>
+                <li>Volga: {{ "%.4f"|format(call_greeks.volga) }}</li>
+                <li>Zomma: {{ "%.4f"|format(call_greeks.zomma) }}</li>
+            </ul>
+        </div>
+        <div class="column">
+            <h4>Put Option Greeks</h4>
+            <ul>
+                <li>Delta: {{ "%.4f"|format(put_greeks.delta) }}</li>
+                <li>Gamma: {{ "%.4f"|format(put_greeks.gamma) }}</li>
+                <li>Theta: {{ "%.4f"|format(put_greeks.theta) }}</li>
+                <li>Vega: {{ "%.4f"|format(put_greeks.vega) }}</li>
+                <li>Vanna: {{ "%.4f"|format(put_greeks.vanna) }}</li>
+                <li>Charm: {{ "%.4f"|format(put_greeks.charm) }}</li>
+                <li>Speed: {{ "%.4f"|format(put_greeks.speed) }}</li>
+                <li>Color: {{ "%.4f"|format(put_greeks.color) }}</li>
+                <li>Volga: {{ "%.4f"|format(put_greeks.volga) }}</li>
+                <li>Zomma: {{ "%.4f"|format(put_greeks.zomma) }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3>Greeks Visualization</h3>
+    <div class="row">
+        <div class="column">
+            <div id="delta_vs_spot"></div>
+            <script>
+                var deltaData = {{ delta_vs_spot|tojson }};
+                Plotly.newPlot('delta_vs_spot', deltaData.data, deltaData.layout);
+            </script>
+        </div>
+        <div class="column">
+            <div id="theta_vs_time"></div>
+            <script>
+                var thetaData = {{ theta_vs_time|tojson }};
+                Plotly.newPlot('theta_vs_time', thetaData.data, thetaData.layout);
+            </script>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <div id="vega_vs_vol"></div>
+            <script>
+                var vegaData = {{ vega_vs_vol|tojson }};
+                Plotly.newPlot('vega_vs_vol', vegaData.data, vegaData.layout);
+            </script>
+        </div>
+        <div class="column">
+            <div id="vanna_vs_spot"></div>
+            <script>
+                var vannaData = {{ vanna_vs_spot|tojson }};
+                Plotly.newPlot('vanna_vs_spot', vannaData.data, vannaData.layout);
+            </script>
+        </div>
+    </div>
 
     <!-- Option Price Surfaces Side by Side -->
     {% if call_surface and put_surface %}

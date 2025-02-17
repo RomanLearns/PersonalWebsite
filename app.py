@@ -3,18 +3,97 @@ import math, statistics, json
 import numpy as np
 import plotly
 import plotly.graph_objects as go
+import plotly.express as px
+from scipy.stats import norm
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+def d1(S, K, t, r, v):
+    return (math.log(S / K) + ((r + (v**2 / 2)) * t)) / (v * math.sqrt(t))
+
+def d2(S, K, t, r, v):
+    return d1(S, K, t, r, v) - v * math.sqrt(t)
 
 def black_scholes_call(S, K, t, r, v):
-    d1 = (math.log(S / K) + ((r + (v**2 / 2)) * t)) / (v * math.sqrt(t))
-    d2 = d1 - v * math.sqrt(t)
-    return S * statistics.NormalDist().cdf(d1) - K * math.exp(-r * t) * statistics.NormalDist().cdf(d2)
+    d1_val = d1(S, K, t, r, v)
+    d2_val = d2(S, K, t, r, v)
+    return S * statistics.NormalDist().cdf(d1_val) - K * math.exp(-r * t) * statistics.NormalDist().cdf(d2_val)
 
 def black_scholes_put(S, K, t, r, v):
-    d1 = (math.log(S / K) + ((r + (v**2 / 2)) * t)) / (v * math.sqrt(t))
-    d2 = d1 - v * math.sqrt(t)
-    return K * math.exp(-r * t) * statistics.NormalDist().cdf(-d2) - S * statistics.NormalDist().cdf(-d1)
+    d1_val = d1(S, K, t, r, v)
+    d2_val = d2(S, K, t, r, v)
+    return K * math.exp(-r * t) * statistics.NormalDist().cdf(-d2_val) - S * statistics.NormalDist().cdf(-d1_val)
+
+def calculate_greeks(S, K, t, r, v, option_type='call'):
+    d1_val = d1(S, K, t, r, v)
+    d2_val = d2(S, K, t, r, v)
+    
+    # Common calculations
+    pdf_d1 = norm.pdf(d1_val)
+    pdf_d2 = norm.pdf(d2_val)
+    cdf_d1 = norm.cdf(d1_val)
+    cdf_d2 = norm.cdf(d2_val)
+    
+    # First-order Greeks
+    if option_type == 'call':
+        delta = cdf_d1
+        theta = (-S * pdf_d1 * v / (2 * math.sqrt(t)) - 
+                r * K * math.exp(-r * t) * cdf_d2)
+    else:
+        delta = cdf_d1 - 1
+        theta = (-S * pdf_d1 * v / (2 * math.sqrt(t)) + 
+                r * K * math.exp(-r * t) * (1 - cdf_d2))
+    
+    # Second-order Greeks
+    gamma = pdf_d1 / (S * v * math.sqrt(t))
+    vega = S * math.sqrt(t) * pdf_d1
+    
+    # Third-order Greeks
+    vanna = -pdf_d1 * d2_val / v  # Vanna (dDelta/dVol)
+    charm = -pdf_d1 * (r / (v * math.sqrt(t)) - d2_val / (2 * t))  # Charm (dDelta/dTime)
+    speed = -gamma * (d1_val / (v * math.sqrt(t)) + 1) / S  # Speed (d²Gamma/dS²)
+    color = -gamma * (r + v**2 * (2 * d1_val * d2_val - d1_val**2) / (4 * t)) / (2 * t)  # Color (dGamma/dTime)
+    volga = vega * d1_val * d2_val / v  # Volga (d²Vega/dVol²)
+    zomma = gamma * (d1_val * d2_val - 1) / v  # Zomma (d²Delta/dVol²)
+    
+    return {
+        'delta': delta,
+        'gamma': gamma,
+        'theta': theta,
+        'vega': vega,
+        'vanna': vanna,
+        'charm': charm,
+        'speed': speed,
+        'color': color,
+        'volga': volga,
+        'zomma': zomma
+    }
+
+def calculate_strategy_prices(strategy, spot_range, K1, K2=None, K3=None, K4=None, t=1.0, r=0.05, v=0.2):
+    prices = []
+    for s in spot_range:
+        if strategy == "Long Butterfly":
+            # Buy 1 call at K1, sell 2 calls at K2, buy 1 call at K3
+            p1 = black_scholes_call(s, K1, t, r, v)
+            p2 = 2 * black_scholes_call(s, K2, t, r, v)
+            p3 = black_scholes_call(s, K3, t, r, v)
+            prices.append(p1 - p2 + p3)
+        elif strategy == "Iron Condor":
+            # Buy put at K1, sell put at K2, sell call at K3, buy call at K4
+            p1 = black_scholes_put(s, K1, t, r, v)
+            p2 = black_scholes_put(s, K2, t, r, v)
+            p3 = black_scholes_call(s, K3, t, r, v)
+            p4 = black_scholes_call(s, K4, t, r, v)
+            prices.append(p1 - p2 - p3 + p4)
+        elif strategy == "Box Spread":
+            # Buy call at K1, sell put at K1, sell call at K2, buy put at K2
+            c1 = black_scholes_call(s, K1, t, r, v)
+            p1 = black_scholes_put(s, K1, t, r, v)
+            c2 = black_scholes_call(s, K2, t, r, v)
+            p2 = black_scholes_put(s, K2, t, r, v)
+            prices.append(c1 - p1 - c2 + p2)
+    return prices
 
 @app.route('/')
 def index():
@@ -61,16 +140,57 @@ def options():
     call = black_scholes_call(spot, strike, time, interest, volatility)
     put = black_scholes_put(spot, strike, time, interest, volatility)
 
-    # Greeks
-    delta_call = (black_scholes_call(spot * 1.01, strike, time, interest, volatility) - call) / (spot * 0.01)
-    delta_put = (black_scholes_put(spot * 1.01, strike, time, interest, volatility) - put) / (spot * 0.01)
-    gamma = ((black_scholes_call(spot * 1.01, strike, time, interest, volatility) -
-              2 * call +
-              black_scholes_call(spot * 0.99, strike, time, interest, volatility))
-             / ((0.01 * spot) ** 2)) / 100
-    theta_call = (black_scholes_call(spot, strike, time - 1/365, interest, volatility) - call) / (1/365)
-    theta_put = (black_scholes_put(spot, strike, time - 1/365, interest, volatility) - put) / (1/365)
-    vega = (black_scholes_call(spot, strike, time, interest, volatility + 0.01) - call) / 0.01
+    # Calculate all Greeks for both call and put options
+    call_greeks = calculate_greeks(spot, strike, time, interest, volatility, 'call')
+    put_greeks = calculate_greeks(spot, strike, time, interest, volatility, 'put')
+
+    # Create Greek visualization charts
+    time_range = np.linspace(0.1, 2, 100)
+    spot_range = np.linspace(spot * 0.5, spot * 1.5, 100)
+    vol_range = np.linspace(volatility * 0.5, volatility * 1.5, 100)
+
+    # Delta vs Spot Price
+    delta_vs_spot = go.Figure()
+    delta_vs_spot.add_trace(go.Scatter(x=spot_range, 
+                                      y=[calculate_greeks(s, strike, time, interest, volatility, 'call')['delta'] for s in spot_range],
+                                      name='Call Delta'))
+    delta_vs_spot.add_trace(go.Scatter(x=spot_range, 
+                                      y=[calculate_greeks(s, strike, time, interest, volatility, 'put')['delta'] for s in spot_range],
+                                      name='Put Delta'))
+    delta_vs_spot.update_layout(title='Delta vs Spot Price',
+                               xaxis_title='Spot Price',
+                               yaxis_title='Delta')
+
+    # Theta vs Time
+    theta_vs_time = go.Figure()
+    theta_vs_time.add_trace(go.Scatter(x=time_range,
+                                      y=[calculate_greeks(spot, strike, t, interest, volatility, 'call')['theta'] for t in time_range],
+                                      name='Call Theta'))
+    theta_vs_time.add_trace(go.Scatter(x=time_range,
+                                      y=[calculate_greeks(spot, strike, t, interest, volatility, 'put')['theta'] for t in time_range],
+                                      name='Put Theta'))
+    theta_vs_time.update_layout(title='Theta vs Time',
+                               xaxis_title='Time to Expiry',
+                               yaxis_title='Theta')
+
+    # Vega vs Volatility
+    vega_vs_vol = go.Figure()
+    vega_vs_vol.add_trace(go.Scatter(x=vol_range,
+                                    y=[calculate_greeks(spot, strike, time, interest, v, 'call')['vega'] for v in vol_range],
+                                    name='Vega'))
+    vega_vs_vol.update_layout(title='Vega vs Volatility',
+                             xaxis_title='Volatility',
+                             yaxis_title='Vega')
+
+    # Higher-order Greeks visualization
+    vanna_vs_spot = go.Figure()
+    vanna_vs_spot.add_trace(go.Scatter(x=spot_range,
+                                      y=[calculate_greeks(s, strike, time, interest, volatility, 'call')['vanna'] for s in spot_range],
+                                      name='Vanna'))
+    vanna_vs_spot.update_layout(title='Vanna vs Spot Price',
+                               xaxis_title='Spot Price',
+                               yaxis_title='Vanna')
+    
 
     # 3D Surface Plots for Call and Put options
     call_surface = None
@@ -136,6 +256,21 @@ def options():
         long_put = black_scholes_put(spot, low_strike, time, interest, volatility)
         strategy_cost = long_call + long_put
         pnl = [max(0, s - high_strike) + max(0, low_strike - s) - strategy_cost for s in spot_range_line]
+    elif strategy == "Long Butterfly":
+        k1 = strike * 0.9
+        k2 = strike
+        k3 = strike * 1.1
+        pnl = calculate_strategy_prices("Long Butterfly", spot_range_line, k1, k2, k3, t=time, r=interest, v=volatility)
+    elif strategy == "Iron Condor":
+        k1 = strike * 0.8
+        k2 = strike * 0.9
+        k3 = strike * 1.1
+        k4 = strike * 1.2
+        pnl = calculate_strategy_prices("Iron Condor", spot_range_line, k1, k2, k3, k4, t=time, r=interest, v=volatility)
+    elif strategy == "Box Spread":
+        k1 = strike
+        k2 = strike * 1.1
+        pnl = calculate_strategy_prices("Box Spread", spot_range_line, k1, k2, t=time, r=interest, v=volatility)
     else:
         pnl = [0 for s in spot_range_line]
 
@@ -189,12 +324,8 @@ def options():
                            volatility=volatility,
                            call=call,
                            put=put,
-                           delta_call=delta_call,
-                           delta_put=delta_put,
-                           gamma=gamma,
-                           theta_call=theta_call,
-                           theta_put=theta_put,
-                           vega=vega,
+                           call_greeks=call_greeks,
+                           put_greeks=put_greeks,
                            call_surface=call_surface,
                            put_surface=put_surface,
                            strategy=strategy,
@@ -208,7 +339,11 @@ def options():
                            simulated_call_price=simulated_call_price,
                            simulated_put_price=simulated_put_price,
                            mc_chart=mc_chart,
-                           hist_chart=hist_chart)
+                           hist_chart=hist_chart,
+                           delta_vs_spot=delta_vs_spot.to_dict(),
+                           theta_vs_time=theta_vs_time.to_dict(),
+                           vega_vs_vol=vega_vs_vol.to_dict(),
+                           vanna_vs_spot=vanna_vs_spot.to_dict())
 
 @app.route('/projects')
 def projects():
@@ -236,4 +371,4 @@ def resume():
     return render_template('resume.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=50708, debug=True)

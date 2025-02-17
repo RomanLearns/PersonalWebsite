@@ -1,14 +1,29 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --background-color: #ecf0f1;
+    --text-color: #2c3e50;
+    --card-background: #ffffff;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background: #f4f4f4;
+    background: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
 }
 
 nav {
-    background-color: #333;
+    background-color: var(--primary-color);
     color: #fff;
-    padding: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 nav ul {
@@ -16,90 +31,185 @@ nav ul {
     margin: 0;
     padding: 0;
     display: flex;
-}
-
-nav ul li {
-    margin-right: 20px;
+    justify-content: center;
+    gap: 2rem;
 }
 
 nav ul li a {
     color: #fff;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+nav ul li a:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
 .container {
-    padding: 20px;
-    background: #fff;
-    margin: 20px auto;
-    max-width: 1200px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 2rem;
+    background: var(--card-background);
+    margin: 2rem auto;
+    max-width: 1400px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
 }
 
 form fieldset {
-    border: 1px solid #ddd;
-    padding: 15px;
-    margin-bottom: 15px;
-    background: #fafafa;
+    border: 2px solid var(--secondary-color);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--card-background);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+form fieldset:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
 }
 
 form legend {
-    font-weight: bold;
-    padding: 0 10px;
+    font-weight: 600;
+    padding: 0 1rem;
+    color: var(--primary-color);
+    font-size: 1.1em;
 }
 
 form label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    font-weight: 500;
 }
 
 form input[type="number"],
 form select {
-    padding: 8px;
+    padding: 0.8rem;
     font-size: 1em;
-    margin-top: 5px;
-    margin-bottom: 15px;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
     width: 100%;
     max-width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 2px solid var(--secondary-color);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+form input[type="number"]:focus,
+form select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
 }
 
 input[type="submit"] {
-    padding: 12px 25px;
+    padding: 1rem 2rem;
     font-size: 1.1em;
-    background-color: #4CAF50;
+    background-color: var(--secondary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 input[type="submit"]:hover {
-    background-color: #45a049;
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-h1, h2, h3 {
-    color: #333;
+h1, h2, h3, h4 {
+    color: var(--primary-color);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 2em;
+    font-weight: 600;
+    border-bottom: 3px solid var(--secondary-color);
+    padding-bottom: 0.5rem;
+}
+
+h3 {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+h4 {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--secondary-color);
 }
 
 hr {
     border: none;
-    height: 1px;
-    background: #ccc;
-    margin: 20px 0;
+    height: 2px;
+    background: var(--secondary-color);
+    margin: 2rem 0;
+    opacity: 0.2;
 }
 
 .row {
     display: flex;
-    flex-direction: row; /* or just "flex" if you prefer row by default */
     flex-wrap: wrap;
-    margin: 20px 0; /* No negative margin */
-    gap: 10px;      /* A small gap between columns */
+    margin: 2rem -1rem;
+    gap: 2rem;
 }
 
 .column {
-    width: 48%;     /* Force each column to ~half the row width */
-    box-sizing: border-box;
+    flex: 1;
+    min-width: 300px;
+    padding: 1rem;
+    background: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.column:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+ul li:last-child {
+    border-bottom: none;
+}
+
+/* Plotly chart containers */
+[id*="surface"],
+[id*="chart"],
+[id*="vs_"] {
+    width: 100%;
+    height: 400px;
+    margin: 1rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
